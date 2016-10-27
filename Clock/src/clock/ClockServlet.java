@@ -13,6 +13,13 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
+
 @SuppressWarnings("serial")
 public class ClockServlet extends HttpServlet {
 
@@ -27,6 +34,30 @@ public class ClockServlet extends HttpServlet {
 		req.setAttribute("user", user);
 		req.setAttribute("loginUrl", loginUrl);
 		req.setAttribute("logoutUrl", logoutUrl);
+		
+		Entity userPrefs = null;
+		
+		
+		
+		if(user != null){
+			DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+			Key userKey = KeyFactory.createKey("UserPrefs", user.getUserId());
+			try{
+				userPrefs = ds.get(userKey);
+			} catch (EntityNotFoundException e){
+				System.err.println(e);
+			}
+		}
+		if (userPrefs != null){
+			double tzOffset = ((Double) userPrefs.getProperty("tz_offset")).doubleValue();
+			fmt.setTimeZone(new SimpleTimeZone((int) (tzOffset * 60 * 60 * 1000), ""));
+			req.setAttribute("tzOffset", tzOffset);
+		} else {
+			req.setAttribute("tzOffset", 0);
+		}
+		
+		
+		
 		req.setAttribute("currentTime", fmt.format(new Date()));
 		resp.setContentType("text/html");
 		RequestDispatcher jsp = req.getRequestDispatcher("/WEB-INF/home.jsp");

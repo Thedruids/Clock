@@ -17,5 +17,15 @@
 		</c:otherwise>
 	</c:choose>
 	<p>The time is: ${currentTime}</p>
+	<c:if test="${user != null}">
+	<form action="/prefs" method="post">
+	<label for="tz_offset">
+	Timezone offset from UTC (can be negative):
+	</label>
+	<input name="tz_offset" id="tz_offset" type="text" size="4" value="${tzOffset}"/>
+	<input type="submit" value="Set"/>
+	</form>
+	</c:if>
+	
 </body>
 </html>
