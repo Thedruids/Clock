@@ -14,32 +14,37 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 @SuppressWarnings("serial")
-public class PrefsServlet extends HttpServlet{
+public class PrefsServlet extends HttpServlet {
 
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
 		
 		UserService userService = UserServiceFactory.getUserService();
 		User user = userService.getCurrentUser();
-		
+
 		DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 		Key userKey = KeyFactory.createKey("UserPrefs", user.getUserId());
 		Entity userPrefs = new Entity(userKey);
 		
-		try{
+		MemcacheService memcache = MemcacheServiceFactory.getMemcacheService();
+		String cacheKey = "UserPrefs:" + user.getUserId();
+
+		try {
 			double tzOffset = new Double(req.getParameter("tz_offset")).doubleValue();
-			
+
 			userPrefs.setProperty("tz_offset", tzOffset);
 			userPrefs.setProperty("user", user);
 			ds.put(userPrefs);
-			
-			
-			
-		} catch (NumberFormatException nfe){
-			
+			memcache.delete(cacheKey);
+
+		} catch (NumberFormatException nfe) {
+
 		}
-		
+
 		resp.sendRedirect("/");
 	}
 }
